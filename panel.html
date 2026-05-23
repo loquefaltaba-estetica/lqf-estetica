@@ -461,8 +461,58 @@ nav{
   var cbName="lic"+Date.now();
   window[cbName]=function(data){
     delete window[cbName];
-    if(data.activo){document.documentElement.style.visibility="visible";}
-    else{
+    if(data.activo){
+      document.documentElement.style.visibility="visible";
+      if(data.vencimiento){
+        var fv=new Date(data.vencimiento);
+        var hoy=new Date();hoy.setHours(0,0,0,0);
+        var diff=Math.ceil((fv-hoy)/(1000*60*60*24));
+        function mostrarAviso(bg,bord,col,svgStr,msg,sub,btnTxt,seg){
+          setTimeout(function(){
+            var av=document.createElement("div");
+            av.style.cssText="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;width:90%;max-width:580px;background:"+bg+";border:1px solid "+bord+";border-radius:10px;padding:13px 20px;display:flex;align-items:center;gap:14px;font-family:Montserrat,sans-serif;";
+            var txt=document.createElement("div");
+            txt.style.flex="1";
+            var t1=document.createElement("div");
+            t1.style.cssText="font-size:13px;font-weight:600;color:"+col+";letter-spacing:.04em;";
+            t1.innerHTML=msg;
+            var t2=document.createElement("div");
+            t2.style.cssText="font-size:11px;color:"+col+";opacity:.7;margin-top:3px;";
+            t2.textContent=sub;
+            txt.appendChild(t1);
+            txt.appendChild(t2);
+            var lnk=document.createElement("a");
+            lnk.href="https://wa.me/5491133252814";
+            lnk.target="_blank";
+            lnk.style.cssText="flex-shrink:0;border:1px solid "+bord+";border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;color:"+col+";text-decoration:none;letter-spacing:.06em;text-transform:uppercase;";
+            lnk.textContent=btnTxt;
+            var cls=document.createElement("button");
+            cls.textContent="x";
+            cls.style.cssText="flex-shrink:0;background:none;border:none;color:"+col+";opacity:.5;cursor:pointer;font-size:18px;line-height:1;padding:0 4px;";
+            cls.onclick=function(){av.remove();};
+            var parser=new DOMParser();
+            var svgDoc=parser.parseFromString(svgStr,"image/svg+xml");
+            av.appendChild(svgDoc.documentElement);
+            av.appendChild(txt);
+            av.appendChild(lnk);
+            av.appendChild(cls);
+            document.body.appendChild(av);
+            setTimeout(function(){
+              av.style.transition="opacity .6s";
+              av.style.opacity="0";
+              setTimeout(function(){av.remove();},600);
+            },seg);
+          },1500);
+        }
+        var svgR='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e06c6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+        var svgA='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8a44a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        if(diff===1){
+          mostrarAviso("rgba(224,108,108,0.12)","rgba(224,108,108,0.6)","#e06c6c",svgR,"Tu servicio DRL vence <b>manana</b> - ultimo dia","Renova ahora para evitar el bloqueo","Renovar YA",15000);
+        } else if(diff<=5&&diff>1){
+          mostrarAviso("rgba(232,164,74,0.12)","rgba(232,164,74,0.55)","#e8a44a",svgA,"Tu servicio DRL vence en <b>"+diff+" dias</b>","Contacta a tu proveedor para renovar","Contactar",10000);
+        }
+      }
+    } else {
       document.documentElement.style.visibility="visible";
       document.body.innerHTML="<div style='display:flex;align-items:center;justify-content:center;min-height:100vh;background:#061e1e;font-family:Montserrat,sans-serif;color:#f0fafa;text-align:center;padding:2rem'><div style='border:1px solid rgba(224,108,108,.3);border-radius:16px;padding:40px 48px;max-width:380px'><div style='font-size:2.5rem;margin-bottom:12px'>&#x1F512;</div><div style='font-size:14px;letter-spacing:3px;color:#e06c6c;text-transform:uppercase;margin-bottom:12px'>Sistema Suspendido</div><p style='color:#7ab8b8;font-size:12px;line-height:1.7'>Contactate con tu proveedor.</p><a href='https://wa.me/5491133252814' target='_blank' style='display:inline-flex;margin-top:20px;padding:10px 22px;border-radius:30px;background:#25d366;color:white;font-size:12px;font-weight:700;text-decoration:none'>Contactar</a></div></div>";
     }
