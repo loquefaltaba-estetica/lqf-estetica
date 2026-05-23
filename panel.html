@@ -1104,7 +1104,7 @@ function renderAgenda(){
       acciones+='<button class="btn-obs-open" data-tid="'+turnoId+'" data-fi="'+fi+'" data-nom="'+nombre.replace(/"/g,"&quot;")+'" onclick="abrirObsModalBtn(this,event)">✎ Observaciones</button>';
       var c='<div class="turno-card">';
       c+='<div class="t-hora">'+horaStr+"</div>";
-      c+='<div class="t-info"><div class="t-nombre">'+nombre+"</div><div class="t-servicio">"+servicio+"</div>"+(f[7]?'<div class="t-medio">'+f[7]+"</div>":"")+"</div>";
+      c+='<div class="t-info"><div class="t-nombre">'+nombre+'</div><div class="t-servicio">'+servicio+'</div>'+(f[7]?'<div class="t-medio">'+f[7]+'</div>':'')+'</div>';
       c+=badge(estado);
       c+='<div class="t-monto">'+monto+"</div>";
       if(acciones)c+='<div class="turno-actions">'+acciones+"</div>";
