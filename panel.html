@@ -1085,8 +1085,16 @@ function procesarDatos(){
       var fechaStr="",horaStr="";
       var fd=parseFechaSheet(rawFecha);
       if(fd&&!isNaN(fd)) fechaStr=isoDate(fd);
-      if(typeof rawHora==="string") horaStr=rawHora.substring(0,5);
-      else if(rawHora instanceof Date) horaStr=rawHora.toTimeString().substring(0,5);
+      if(typeof rawHora==="string"){
+        if(rawHora.includes("T")){
+          var dh=new Date(rawHora);
+          horaStr=String(dh.getHours()).padStart(2,"0")+":"+String(dh.getMinutes()).padStart(2,"0");
+        } else {
+          horaStr=rawHora.substring(0,5);
+        }
+      } else if(rawHora instanceof Date){
+        horaStr=rawHora.toTimeString().substring(0,5);
+      }
       if(fechaStr&&horaStr) turnosOcupados.push({fecha:fechaStr,hora:horaStr,servicio:String(f[3]||"")});
     }
   });
