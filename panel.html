@@ -395,6 +395,10 @@ nav{
 .btn-pagar.pagado{opacity:.5;cursor:default;}
 .btn-devolucion{background:rgba(201,168,76,.1);color:var(--gold-l);border:1px solid rgba(201,168,76,.25);}
 .btn-devolucion:hover{background:rgba(201,168,76,.22);}
+.cliente-drop-item{padding:9px 14px;font-size:.78rem;color:var(--white);cursor:pointer;border-bottom:1px solid rgba(20,184,184,.08);transition:background .15s;}
+.cliente-drop-item:hover{background:rgba(20,184,184,.12);}
+.cliente-drop-item:last-child{border-bottom:none;}
+.cliente-drop-item span{font-size:.66rem;color:var(--muted);margin-left:8px;}
 .monto-input{width:90px;padding:4px 8px;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid rgba(94,204,138,.3);color:var(--white);font-size:.72rem;font-family:"Montserrat",sans-serif;outline:none;}
 .btn-obs-open{padding:5px 11px;border-radius:5px;font-size:.62rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:rgba(20,184,184,.07);color:var(--muted);border:1px solid rgba(20,184,184,.15);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;}
 .btn-obs-open:hover{background:rgba(20,184,184,.16);color:var(--teal-l);border-color:rgba(20,184,184,.3);}
@@ -822,7 +826,11 @@ nav{
     <div class="paso" id="p3">
       <h2 class="modal-title">Datos</h2>
       <p class="modal-sub">Casi listo</p>
-      <div class="fg"><label>Nombre</label><input id="iNom" type="text" placeholder="Nombre completo"/></div>
+      <div class="fg" style="position:relative;">
+        <label>Nombre</label>
+        <input id="iNom" type="text" placeholder="Nombre completo o buscá cliente..." autocomplete="off" oninput="buscarCliente(this.value)"/>
+        <div id="clienteDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:500;background:#0a3535;border:1px solid rgba(20,184,184,.3);border-radius:0 0 8px 8px;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5);"></div>
+      </div>
       <div class="fg"><label>WhatsApp</label><input id="iTel" type="tel" placeholder="11 xxxx-xxxx"/></div>
       <div class="fg"><label>Email (opcional)</label><input id="iMail" type="email" placeholder="tu@email.com"/></div>
       <div class="fg">
@@ -1336,6 +1344,39 @@ function mostrarFicha(){
   }
   document.getElementById("fichaGrid").style.display="grid";
 }
+
+// AUTOCOMPLETE CLIENTES
+function normStr(s){return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");}
+
+function buscarCliente(val){
+  var dd=document.getElementById("clienteDropdown");
+  if(!val||val.length<2){dd.style.display="none";return;}
+  if(!datos||!datos.clientes){dd.style.display="none";return;}
+  var clis=datos.clientes.slice(1).filter(function(c){return c[0]&&c[1];});
+  var q=normStr(val);
+  var matches=clis.filter(function(c){
+    return normStr(c[1]).includes(q)||normStr(String(c[4]||"")).includes(q);
+  }).slice(0,8);
+  if(matches.length===0){dd.style.display="none";return;}
+  dd.innerHTML=matches.map(function(c){
+    var nombre=String(c[1]||"");
+    var tel=String(c[4]||"");
+    return '<div class="cliente-drop-item" onclick="seleccionarCliente('+JSON.stringify(nombre)+','+JSON.stringify(tel)+')">'+nombre+'<span>'+tel+'</span></div>';
+  }).join("");
+  dd.style.display="block";
+}
+
+function seleccionarCliente(nombre,tel){
+  document.getElementById("iNom").value=nombre;
+  document.getElementById("iTel").value=tel;
+  document.getElementById("clienteDropdown").style.display="none";
+}
+
+// Cerrar dropdown al hacer click afuera
+document.addEventListener("click",function(e){
+  var dd=document.getElementById("clienteDropdown");
+  if(dd&&!dd.contains(e.target)&&e.target.id!=="iNom") dd.style.display="none";
+});
 
 // MODAL RESERVA
 function openModal(){
