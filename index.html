@@ -813,8 +813,17 @@ function cargarTurnos(){
             fechaStr = rawFecha.substring(0,10);
           }
           let horaStr = '';
-          if(typeof rawHora==='string') horaStr = rawHora.substring(0,5);
-          else if(rawHora instanceof Date) horaStr = rawHora.toTimeString().substring(0,5);
+          if(typeof rawHora==='string'){
+            if(rawHora.includes('T')){
+              // Google Sheets serializa horas como ISO: "1899-12-30T12:00:00.000Z" = 09:00 ARG
+              var dh=new Date(rawHora);
+              horaStr=String(dh.getHours()).padStart(2,'0')+':'+String(dh.getMinutes()).padStart(2,'0');
+            } else {
+              horaStr=rawHora.substring(0,5);
+            }
+          } else if(rawHora instanceof Date){
+            horaStr=rawHora.toTimeString().substring(0,5);
+          }
           if(fechaStr && horaStr) turnosOcupados.push({fecha:fechaStr, hora:horaStr, servicio:String(row[3]||'')});
         }
       });
