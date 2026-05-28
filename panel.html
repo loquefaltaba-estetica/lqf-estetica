@@ -934,7 +934,35 @@ nav{
 <script>
 const AS_URL="https://script.google.com/macros/s/AKfycbxUvLBus6VkSJlE7eymJ1eX1jMeO27Q2jOCwGW76FjH5Ta503BVrZ1Ym5u-ntGi1urq/exec";
 const PASS="MiaBenito";
-const HORARIOS=["09:00","09:30","10:00","10:30","11:00","11:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30"];
+const HORARIOS_30=["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00"];
+const HORARIOS_15=["08:00","08:15","08:30","08:45","09:00","09:15","09:30","09:45","10:00","10:15","10:30","10:45","11:00","11:15","11:30","11:45","12:00","12:15","12:30","12:45","13:00","13:15","13:30","13:45","14:00","14:15","14:30","14:45","15:00","15:15","15:30","15:45","16:00","16:15","16:30","16:45","17:00","17:15","17:30","17:45","18:00","18:15","18:30","18:45","19:00","19:15","19:30","19:45","20:00"];
+const DURACION={"Plasma":1,"Criolipólisis":2,"Masajes":3,"Body Up":1,"Vela Max":1,"Presoterapia":1,"HIFU 12D":1,"Bronceado sin Sol":2,"Depilación":1,"Showroom Lencería":1};
+const HORARIOS_PLASMA=["13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00","18:30","19:00","19:30","20:00","20:30"];
+function getHorarios(){
+  if(reservaState.servicio==="Depilación") return HORARIOS_15;
+  if(reservaState.servicio==="Plasma") return HORARIOS_PLASMA;
+  return HORARIOS_30;
+}
+function getSlotMin(){return reservaState.servicio==="Depilación"?15:30;}
+
+function tercerLunes(anio,mes){
+  var d=new Date(anio,mes,1);
+  var diasHastaLunes=(8-d.getDay())%7;
+  return new Date(anio,mes,1+diasHastaLunes+14);
+}
+function proximoTercerLunes(){
+  var hoy=new Date();hoy.setHours(0,0,0,0);
+  var tl=tercerLunes(hoy.getFullYear(),hoy.getMonth());
+  if(hoy>tl){
+    var nm=hoy.getMonth()+1,na=hoy.getFullYear();
+    if(nm>11){nm=0;na++;}
+    tl=tercerLunes(na,nm);
+  }
+  return tl;
+}
+function isoFecha(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
 
 let datos=null;
 let turnosOcupados=[];
@@ -1333,7 +1361,33 @@ document.querySelectorAll(".srv-opt").forEach(function(o){
 document.getElementById("btnP1").addEventListener("click",function(){
   if(!reservaState.servicio){showErr("err1","Seleccioná un servicio.");return;}
   document.getElementById("err1").classList.remove("on");
-  irPaso(2);if(reservaState.fecha)renderHorarios();
+  irPaso(2);
+  if(reservaState.servicio==="Depilación"){
+    var tl=proximoTercerLunes();
+    var iso=isoFecha(tl);
+    var dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+    var meses=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    if(!reservaState.fecha) reservaState.fecha=iso;
+    var iFec=document.getElementById("iFec");
+    if(!reservaState.fecha) iFec.value=iso;
+    // Panel: campo editable pero con sugerencia
+    iFec.disabled=false;
+    var lbl=document.getElementById("fechaDepilLbl");
+    if(!lbl){
+      lbl=document.createElement("p");lbl.id="fechaDepilLbl";
+      lbl.style.cssText="font-size:.72rem;color:var(--teal-l);letter-spacing:.08em;margin-bottom:8px;";
+      iFec.parentNode.insertBefore(lbl,iFec);
+    }
+    lbl.textContent="Próxima jornada sugerida: "+dias[tl.getDay()]+" "+tl.getDate()+" de "+meses[tl.getMonth()]+" (podés editar la fecha)";
+    if(!reservaState.fecha){ reservaState.fecha=iso; iFec.value=iso; }
+    renderHorarios();
+  } else {
+    var iFec=document.getElementById("iFec");
+    iFec.disabled=false;
+    var lbl=document.getElementById("fechaDepilLbl");
+    if(lbl)lbl.remove();
+    if(reservaState.fecha)renderHorarios();
+  }
 });
 document.getElementById("backP1").addEventListener("click",function(){irPaso(1);});
 document.getElementById("iFec").addEventListener("change",function(e){
@@ -1341,14 +1395,29 @@ document.getElementById("iFec").addEventListener("change",function(e){
 });
 document.getElementById("iFec").min=new Date().toISOString().split("T")[0];
 
-function esOcupado(h){return turnosOcupados.some(function(t){return t.fecha===reservaState.fecha&&t.hora===h;});}
+function horaAMin(h){var p=h.split(":");return parseInt(p[0])*60+parseInt(p[1]);}
+function esOcupado(h){
+  var slotMin=getSlotMin();
+  var durSlots=DURACION[reservaState.servicio]||1;
+  var inicioNuevo=horaAMin(h);
+  var finNuevo=inicioNuevo+(durSlots*slotMin);
+  return turnosOcupados.some(function(t){
+    if(t.fecha!==reservaState.fecha) return false;
+    var inicioOcup=horaAMin(t.hora);
+    var durOcup=DURACION[t.servicio]||1;
+    var slotOcup=t.servicio==="Depilación"?15:30;
+    var finOcup=inicioOcup+(durOcup*slotOcup);
+    return inicioNuevo<finOcup && finNuevo>inicioOcup;
+  });
+}
 function renderHorarios(){
   var g=document.getElementById("horariosGrid");g.innerHTML="";
-  HORARIOS.forEach(function(h){
+  getHorarios().forEach(function(h){
     var btn=document.createElement("button");
-    btn.className="hora-btn"+(esOcupado(h)?" ocupado":"")+(reservaState.hora===h?" sel":"");
-    btn.textContent=h;btn.disabled=esOcupado(h);
-    if(!esOcupado(h))btn.addEventListener("click",function(){
+    var ocupado=esOcupado(h);
+    btn.className="hora-btn"+(ocupado?" ocupado":"")+(reservaState.hora===h?" sel":"");
+    btn.textContent=h;btn.disabled=ocupado;
+    if(!ocupado)btn.addEventListener("click",function(){
       document.querySelectorAll(".hora-btn").forEach(function(b){b.classList.remove("sel");});
       btn.classList.add("sel");reservaState.hora=h;
     });
