@@ -1358,17 +1358,34 @@ function buscarCliente(val){
     return normStr(c[1]).includes(q)||normStr(String(c[4]||"")).includes(q);
   }).slice(0,8);
   if(matches.length===0){dd.style.display="none";return;}
-  dd.innerHTML=matches.map(function(c){
+  dd.innerHTML="";
+  matches.forEach(function(c){
     var nombre=String(c[1]||"");
     var tel=String(c[4]||"");
-    return '<div class="cliente-drop-item" onclick="seleccionarCliente('+JSON.stringify(nombre)+','+JSON.stringify(tel)+')">'+nombre+'<span>'+tel+'</span></div>';
-  }).join("");
+    var mail=String(c[5]||"");
+    var item=document.createElement("div");
+    item.className="cliente-drop-item";
+    item.innerHTML=nombre+(tel?'<span>'+tel+'</span>':"");
+    item.setAttribute("data-nombre",nombre);
+    item.setAttribute("data-tel",tel);
+    item.setAttribute("data-mail",mail);
+    item.addEventListener("mousedown",function(e){
+      e.preventDefault();
+      seleccionarCliente(
+        this.getAttribute("data-nombre"),
+        this.getAttribute("data-tel"),
+        this.getAttribute("data-mail")
+      );
+    });
+    dd.appendChild(item);
+  });
   dd.style.display="block";
 }
 
-function seleccionarCliente(nombre,tel){
+function seleccionarCliente(nombre,tel,mail){
   document.getElementById("iNom").value=nombre;
   document.getElementById("iTel").value=tel;
+  if(mail) document.getElementById("iMail").value=mail;
   document.getElementById("clienteDropdown").style.display="none";
 }
 
