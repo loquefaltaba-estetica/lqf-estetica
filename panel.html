@@ -1076,6 +1076,21 @@ function procesarDatos(){
 
   function esMes(v){if(!v)return false;var h=new Date(),f=parseFechaSheet(v);if(!f)return false;return f.getFullYear()===h.getFullYear()&&f.getMonth()===h.getMonth();}
 
+  // Llenar turnosOcupados para el modal de reservas
+  turnosOcupados=[];
+  fs.forEach(function(f){
+    var est=String(f[6]||"");
+    if(est==="Confirmado"||est==="Pendiente"){
+      var rawFecha=f[0],rawHora=f[1];
+      var fechaStr="",horaStr="";
+      var fd=parseFechaSheet(rawFecha);
+      if(fd&&!isNaN(fd)) fechaStr=isoDate(fd);
+      if(typeof rawHora==="string") horaStr=rawHora.substring(0,5);
+      else if(rawHora instanceof Date) horaStr=rawHora.toTimeString().substring(0,5);
+      if(fechaStr&&horaStr) turnosOcupados.push({fecha:fechaStr,hora:horaStr,servicio:String(f[3]||"")});
+    }
+  });
+
   var hoyStr=(function(){var d=new Date();return isoDate(d);})();
   var turnosHoy=fs.filter(function(f){
     if(!f[0])return false;
