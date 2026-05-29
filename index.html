@@ -800,17 +800,21 @@ function cargarTurnos(){
           const rawFecha = row[0];
           const rawHora = row[1];
           let fechaStr = '';
-          if(rawFecha instanceof Date || (typeof rawFecha==='string' && rawFecha)){
+          if(rawFecha){
             var s=String(rawFecha).trim();
+            // dd/MM/yyyy
             var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
             if(m){
               fechaStr=m[3]+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0');
-            } else {
-              const d=new Date(rawFecha);
-              if(!isNaN(d)) fechaStr=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+            // ISO con T: usar fecha en ARG (UTC-3)
+            } else if(s.includes('T')){
+              var dUTC=new Date(s);
+              var dARG=new Date(dUTC.getTime()-3*60*60*1000);
+              fechaStr=dARG.getUTCFullYear()+'-'+String(dARG.getUTCMonth()+1).padStart(2,'0')+'-'+String(dARG.getUTCDate()).padStart(2,'0');
+            // yyyy-MM-dd directo
+            } else if(s.match(/^\d{4}-\d{2}-\d{2}/)){
+              fechaStr=s.substring(0,10);
             }
-          } else if(typeof rawFecha==='string'){
-            fechaStr = rawFecha.substring(0,10);
           }
           let horaStr = '';
           if(typeof rawHora==='string'){
