@@ -683,6 +683,7 @@ function isoFecha(d){
 
 let state = { servicio:'', fecha:'', hora:'', medioPago:'' };
 let turnosOcupados = [];
+let turnosListos = false;
 
 const ham = document.getElementById('ham');
 const drawer = document.getElementById('drawer');
@@ -841,11 +842,8 @@ function cargarTurnos(){
     }
     document.body.removeChild(script);
     delete window[cbName];
-    // Si el usuario ya llegó al paso 2 con fecha elegida, refrescar la grilla
-    var paso2 = document.getElementById('paso2');
-    if(paso2 && paso2.classList.contains('on') && state.fecha){
-      renderHorarios();
-    }
+    turnosListos = true;
+    renderHorarios();
   };
   script.src = AS_URL + '?callback=' + cbName + '&token=DRL194749';
   document.body.appendChild(script);
@@ -862,6 +860,26 @@ document.querySelectorAll('.srv-opt').forEach(o=>{
 document.getElementById('btnPaso1').addEventListener('click',()=>{
   if(!state.servicio){ mostrarError('err1','Seleccioná un servicio para continuar.'); return; }
   document.getElementById('err1').classList.remove('on');
+  if(!turnosListos){
+    // Datos aún cargando - esperar y reintentar
+    var btn=document.getElementById('btnPaso1');
+    btn.disabled=true; btn.textContent='Cargando horarios...';
+    var chk=setInterval(function(){
+      if(turnosListos){
+        clearInterval(chk);
+        btn.disabled=false; btn.textContent='Elegir fecha y hora';
+        irAPaso(2);
+        if(state.servicio==="Depilación"){
+          var tl=proximoTercerLunes();
+          state.fecha=isoFecha(tl);
+          document.getElementById('iFec').value=state.fecha;
+          document.getElementById('iFec').disabled=true;
+        }
+        renderHorarios();
+      }
+    },300);
+    return;
+  }
   irAPaso(2);
   if(state.servicio==="Depilación"){
     var tl = proximoTercerLunes();
