@@ -841,7 +841,10 @@ function cargarTurnos(){
     }
     document.body.removeChild(script);
     delete window[cbName];
-    renderHorarios();
+    // Refrescar grilla si el modal está abierto y hay fecha/servicio elegido
+    if(document.getElementById('modalOverlay').classList.contains('on') && state.fecha && state.servicio){
+      renderHorarios();
+    }
   };
   script.src = AS_URL + '?callback=' + cbName + '&token=DRL194749';
   document.body.appendChild(script);
