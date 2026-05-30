@@ -739,7 +739,7 @@ function openModal(){
   modalOverlay.classList.add('on');
   document.body.style.overflow='hidden';
   resetModal();
-  cargarTurnos();
+  if(turnosOcupados.length===0) cargarTurnos();
 }
 function closeModal(){
   modalOverlay.classList.remove('on');
@@ -1100,6 +1100,7 @@ function descargarGCIndex(){
 }
 
 document.addEventListener("DOMContentLoaded",function(){
+  cargarTurnos();
   var ov=document.getElementById("modalGCOverlay");
   if(ov)ov.addEventListener("click",function(e){if(e.target===this)cerrarModalGC();});
 });
