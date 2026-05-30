@@ -739,7 +739,7 @@ function openModal(){
   modalOverlay.classList.add('on');
   document.body.style.overflow='hidden';
   resetModal();
-  if(turnosOcupados.length===0) cargarTurnos();
+  cargarTurnos();
 }
 function closeModal(){
   modalOverlay.classList.remove('on');
@@ -841,8 +841,9 @@ function cargarTurnos(){
     }
     document.body.removeChild(script);
     delete window[cbName];
-    // Refrescar grilla si el modal está abierto y hay fecha/servicio elegido
-    if(document.getElementById('modalOverlay').classList.contains('on') && state.fecha && state.servicio){
+    // Si el usuario ya llegó al paso 2 con fecha elegida, refrescar la grilla
+    var paso2 = document.getElementById('paso2');
+    if(paso2 && paso2.classList.contains('on') && state.fecha){
       renderHorarios();
     }
   };
