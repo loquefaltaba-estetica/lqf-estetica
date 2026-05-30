@@ -819,17 +819,20 @@ function cargarTurnos(){
           let horaStr = '';
           if(typeof rawHora==='string'){
             if(rawHora.includes('T')){
-              // Sheets manda hora como "1899-12-30T19:16:48.000Z" → sumar 3hs ARG
+              // Sheets serializa horas con offset interno: restar 11hs y redondear a 15min
               var dh=new Date(rawHora);
-              var totalMin=dh.getUTCHours()*60+dh.getUTCMinutes();
-              totalMin=(totalMin+180)%1440; // +3hs ARG
+              var totalMin=dh.getUTCHours()*60+dh.getUTCMinutes()-660;
+              if(totalMin<0)totalMin+=1440;
+              // Redondear al cuarto de hora más cercano
+              totalMin=Math.round(totalMin/15)*15;
               horaStr=String(Math.floor(totalMin/60)).padStart(2,'0')+':'+String(totalMin%60).padStart(2,'0');
             } else {
               horaStr=rawHora.substring(0,5);
             }
           } else if(rawHora instanceof Date){
-            var totalMin=rawHora.getUTCHours()*60+rawHora.getUTCMinutes();
-            totalMin=(totalMin+180)%1440;
+            var totalMin=rawHora.getUTCHours()*60+rawHora.getUTCMinutes()-660;
+            if(totalMin<0)totalMin+=1440;
+            totalMin=Math.round(totalMin/15)*15;
             horaStr=String(Math.floor(totalMin/60)).padStart(2,'0')+':'+String(totalMin%60).padStart(2,'0');
           }
           if(fechaStr && horaStr) turnosOcupados.push({fecha:fechaStr, hora:horaStr, servicio:String(row[3]||'')});
